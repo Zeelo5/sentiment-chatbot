@@ -1,0 +1,7 @@
+flask
+transformers
+requests
+nltk
+python-dotenv
+tensorflow  # Or replace with 'torch' if using PyTorch
+tf-keras
