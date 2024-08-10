@@ -1,62 +1,17 @@
-# from flask import Flask
-
-# app = Flask(__name__)
-# app.config.from_object('config')
-
-# from app import routes
- 
-# from flask import Flask
-# from .routes import main
-# from .suggestions import suggest
-
-# # Initialize the app
-# def create_app():
-#     app = Flask(__name__)
-#     app.config.from_pyfile('config.py')
-
-#     # Register blueprints
-#     app.register_blueprint(main)
-#     app.register_blueprint(suggest)
-
-#     return app
-
-
-
-# from flask import Flask
-
-# # Initialize the app
-# def create_app():
-#     app = Flask(__name__)
-#     app.config.from_pyfile('config.py')
-
-#     # Register blueprints
-#     from .routes import main
-#     from .suggestions import suggest
-#     app.register_blueprint(main)
-#     app.register_blueprint(suggest)
-
-#     return app
-
-
-# from flask import Flask
-# from .routes import main  # Import routes after initializing app
-
-# def create_app():
-#     app = Flask(__name__)
-#     app.config.from_pyfile('config.py')
-#     app.register_blueprint(main)  # Register the routes blueprint
-#     return app
 
 
 from flask import Flask
+import pandas as pd
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_mapping(
-        SECRET_KEY='your-secret-key',
-    )
+    
+    # Load the FAQ CSV file
+    faq_df = pd.read_csv(r"D:\\New folder\Documents\sentiment-chatbot\\Mental_Health_FAQ.csv")
 
-    from .routes import suggest_bp
-    app.register_blueprint(suggest_bp, url_prefix='/suggest')  # Register the Blueprint with the correct URL prefix
+    with app.app_context():
+        from .routes import suggest_bp
+        app.register_blueprint(suggest_bp)
+        app.faq_df = faq_df  # Make the DataFrame available globally within the app
 
     return app
