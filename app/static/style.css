@@ -18,7 +18,7 @@ form {
     margin-bottom: 20px;
 }
 
-#user-input {
+#user-message {
     width: 80%;
     padding: 10px;
     margin-right: 10px;
@@ -28,6 +28,6 @@ button {
     padding: 10px 20px;
 }
 
-#chat-box {
+#response {
     margin-top: 20px;
 }
