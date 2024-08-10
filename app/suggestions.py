@@ -1,25 +1,66 @@
-from flask import Blueprint, request, jsonify
+import pandas as pd
 from transformers import pipeline
 import nltk
-
-# Initialize sentiment analysis model
+import random
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 nltk.download('vader_lexicon')
+
+
+
+faq_df = pd.read_csv(r"D:\\New folder\Documents\sentiment-chatbot\\Mental_Health_FAQ.csv")
+
 sentiment_analyzer = pipeline("sentiment-analysis")
+def suggest(text):
+    # Check for FAQ match
+    questions = faq_df['Question'].tolist()
+    tfidf_vectorizer = TfidfVectorizer().fit_transform(questions)
+    user_tfidf = TfidfVectorizer().fit(questions).transform([text])
+    similarity = cosine_similarity(user_tfidf, tfidf_vectorizer).flatten()
+    max_similarity_idx = similarity.argmax()
 
-suggest = Blueprint('suggest', __name__)
-
-@suggest.route('/suggest', methods=['POST'])
-# @suggest.route('/suggest', methods=['POST'])
-def get_suggestions():
-    user_input = request.json.get('text')
-    print(f"User input: {user_input}")  # Debugging print
-    sentiment_score = sentiment_analyzer(user_input)[0]['label']
-    print(f"Sentiment score: {sentiment_score}")  # Debugging print
-
-    if sentiment_score == 'NEGATIVE':
-        response = {"message": "I'm sorry you're feeling down. Maybe check out some uplifting content!"}
+    if similarity[max_similarity_idx] > 0.7:
+        response = faq_df.iloc[max_similarity_idx]['Answer']
     else:
-        response = {"message": "Glad to hear you're doing well!"}
-    
-    return jsonify(response)
+        # Sentiment analysis
+        sentiment_score = sentiment_analyzer(text)[0]
+        sentiment_label = sentiment_score['label']
+        sentiment_confidence = sentiment_score['score']
 
+        response_database = {
+            "negative_responses": [
+                "I'm sorry you're feeling down. Maybe check out some uplifting content!",
+                "It sounds tough. Hang in there!",
+                "Don't worry, things will get better!",
+                "Sorry to hear that. Want to talk about it?"
+            ],
+            "positive_responses": [
+                "Glad to hear you're doing well!",
+                "That's great to hear!",
+                "Wonderful news!",
+                "Keep up the positive vibes!"
+            ],
+            "neutral_responses": [
+                "I'm here to help with sentiment analysis.",
+                "Let me know if there's anything specific you'd like to discuss.",
+                "Thanks for sharing that.",
+                "Okay, noted."
+            ]
+        }
+
+        if sentiment_label == 'NEGATIVE':
+            response = random.choice(response_database['negative_responses'])
+        elif sentiment_label == 'POSITIVE':
+            response = random.choice(response_database['positive_responses'])
+        else:
+            response = random.choice(response_database['neutral_responses'])
+
+        response += f" (Confidence: {sentiment_confidence:.2f})"
+
+    return response
+
+
+if __name__ == "__main__":
+    user_input = input("You: ")
+    bot_response = suggest(user_input)
+    print(f"Bot: {bot_response}")
