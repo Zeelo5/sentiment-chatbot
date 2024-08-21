@@ -12,4 +12,5 @@ def suggest_route():
     data = request.get_json()
     text = data.get('text', '')
     response = suggest(text)  # Call the suggest function
-    return jsonify(response)
+    # return jsonify(response)
+    return jsonify({'response': response})
